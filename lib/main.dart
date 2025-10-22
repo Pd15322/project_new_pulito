@@ -955,6 +955,145 @@ class _SchermataTavoliState extends State<SchermataTavoli> {
       ),
       body: Container(
         color: Colors.white,
+        child: Column(
+          children: [
+            // NUOVO: Barra controlli spostata qui sotto l'AppBar
+            SafeArea(  // ← AGGIUNTO
+              child: Container(
+                height: 60,
+                color: Colors.grey.shade800,
+                padding: EdgeInsets.symmetric(horizontal: 8.0),  // ← AGGIUNTO
+                child: Row(
+                  children: [
+                    // Gestione dipendenti (solo admin)
+                    if (_isAdmin)
+                      IconButton(
+                        icon: Icon(Icons.people, color: Colors.yellow),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GestioneDipendentiScreen(),
+                            ),
+                          );
+                        },
+                        tooltip: 'Gestione Dipendenti',
+                      ),
+
+                    // NUOVO: Modifica prezzi (solo admin)
+                    if (_isAdmin)
+                      IconButton(
+                        icon: Icon(Icons.euro, color: Colors.yellow),
+                        onPressed: _apriModificaPrezzi,
+                        tooltip: 'Modifica Prezzi',
+                      ),
+
+                    // Cestino ordini
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CestinoScreen(),
+                          ),
+                        );
+                      },
+                      tooltip: 'Cestino ordini',
+                    ),
+
+                    // NUOVO: Libera tutti i tavoli
+                    IconButton(
+                      icon: Icon(Icons.cleaning_services, color: Colors.red),
+                      onPressed: _liberaTuttiITavoli,
+                      tooltip: 'Libera tutti i tavoli',
+                    ),
+
+                    Spacer(),
+
+                    // Nome utente
+                    Padding(
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        widget.username,
+                        style: TextStyle(color: Colors.green, fontSize: 16),
+                      ),
+                    ),
+
+                    // Stampante
+                    IconButton(
+                      icon: Icon(Icons.print, color: Colors.white),
+                      onPressed: _apriImpostazioniStampante,
+                      tooltip: 'Impostazioni Stampante WiFi',
+                    ),
+// Logout
+                    IconButton(
+                      icon: Icon(Icons.logout, color: Colors.red),
+                      onPressed: _logout,
+                      tooltip: 'Disconnetti',
+                    ),
+                  ],
+                ),
+              ),
+            ),  // ← AGGIUNTO chiusura SafeArea
+
+            // Griglia dei tavoli
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: 30,
+                itemBuilder: (context, index) {
+                  final tavoloNumero = index + 1;
+                  final coloreTavolo = _getColoreTavolo(tavoloNumero);
+                  return GestureDetector(
+                    onTap: () {
+                      print(
+                          'DEBUG: Tocco tavolo $tavoloNumero - colore: ${coloreTavolo ==
+                              Colors.green ? "verde" : "rosso"}');
+                      if (coloreTavolo == Colors.green) {
+                        // Tavolo libero → vai ai coperti
+                        _vaiASchermataCoperti(tavoloNumero, context);
+                      } else {
+                        // Tavolo occupato → vai direttamente al menù con ordini esistenti
+                        _vaiASchermataMenuEsistente(tavoloNumero, context);
+                      }
+                    },
+                    onDoubleTap: () {
+                      if (coloreTavolo == Colors.red) {
+                        print(
+                            'DEBUG: Doppio tocco - liberando tavolo $tavoloNumero');
+                        _liberaTavoloCompleto(tavoloNumero);
+                      }
+                    },
+                    onLongPress: () {
+                      if (coloreTavolo == Colors.red) {
+                        _modificaCopertiTavolo(tavoloNumero);
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: coloreTavolo,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Tavolo $tavoloNumero',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
